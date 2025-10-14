@@ -53,7 +53,7 @@ export default function Home() {
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setHasSearched(false); }}
               placeholder="Search for a movie or TV show..."
-              className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-black"
+              className="flex-1 px-4 py-3 rounded-lg border border-gray-300 bg-white text-brand-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-black"
             />
             <button
               type="submit"

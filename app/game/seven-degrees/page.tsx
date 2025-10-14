@@ -93,53 +93,52 @@ export default function SevenDegreesPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-white">
+      <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <a href="/" className="text-sm text-brand-black hover:underline">← Back to search</a>
         <Link href="/settings" className="text-sm text-brand-black hover:underline">Settings</Link>
       </div>
 
-      <h1 className="text-3xl font-extrabold text-brand-black mb-4">Seven Degrees</h1>
+      <h1 className="text-3xl font-extrabold text-brand-black mb-4">Seven Degrees of Kevin Bacon</h1>
 
       {initData && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="md:col-span-1">
+        <div className="mb-6">
+          <div className="grid grid-cols-2 gap-3">
             <div className="bg-white rounded-lg shadow-card border border-gray-100 overflow-hidden">
-              <div className="h-64 bg-gray-200 relative">
+              <div className="h-32 sm:h-36 bg-gray-200 relative">
                 {initData.start.poster_path ? (
                   <img src={`https://image.tmdb.org/t/p/w500${initData.start.poster_path}`} alt={initData.start.title} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
                 )}
               </div>
-              <div className="p-4">
-                <h2 className="text-lg font-semibold text-brand-black">Start</h2>
-                <p className="text-brand-black">{initData.start.title}</p>
-                <p className="text-gray-600 text-sm">{initData.start.media_type === 'movie' ? 'Movie' : 'TV Show'}{initData.start.release_year ? ` • ${initData.start.release_year}` : ''}</p>
+              <div className="p-3">
+                <div className="text-sm font-semibold text-brand-black">Start</div>
+                <div className="text-brand-black text-sm line-clamp-2">{initData.start.title}</div>
+                <div className="text-gray-600 text-xs">{initData.start.media_type === 'movie' ? 'Movie' : 'TV Show'}{initData.start.release_year ? ` • ${initData.start.release_year}` : ''}</div>
               </div>
             </div>
-          </div>
 
-          <div className="md:col-span-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-sm text-gray-600">Moves left</div>
-              <div className="text-4xl font-extrabold text-brand-black">{movesLeft}</div>
-            </div>
-          </div>
-
-          <div className="md:col-span-1">
             <div className="bg-white rounded-lg shadow-card border border-gray-100 overflow-hidden">
-              <div className="h-64 bg-gray-200 relative">
+              <div className="h-32 sm:h-36 bg-gray-200 relative">
                 {initData.target.profile_path ? (
                   <img src={`https://image.tmdb.org/t/p/w500${initData.target.profile_path}`} alt={initData.target.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
                 )}
               </div>
-              <div className="p-4">
-                <h2 className="text-lg font-semibold text-brand-black">Target actor</h2>
-                <p className="text-brand-black">{initData.target.name}</p>
+              <div className="p-3">
+                <div className="text-sm font-semibold text-brand-black">Target actor</div>
+                <div className="text-brand-black text-sm">{initData.target.name}</div>
               </div>
+            </div>
+          </div>
+
+          <div className="mt-3 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-gray-100">
+              <span className="text-sm text-gray-700">Moves left</span>
+              <span className="text-2xl font-extrabold text-brand-black leading-none">{movesLeft}</span>
             </div>
           </div>
         </div>
@@ -175,7 +174,7 @@ export default function SevenDegreesPage() {
                   className="bg-white rounded-lg shadow-card overflow-hidden hover:shadow-card-hover transition-shadow border border-gray-100 text-left"
                   onClick={() => onPick(p)}
                 >
-                  <div className="h-40 bg-gray-200 relative">
+                  <div className="h-36 sm:h-40 bg-gray-200 relative">
                     {p.profile_path ? (
                       <img src={`https://image.tmdb.org/t/p/w500${p.profile_path}`} alt={p.name} className="w-full h-full object-cover" />
                     ) : (
@@ -204,7 +203,7 @@ export default function SevenDegreesPage() {
                   className="bg-white rounded-lg shadow-card overflow-hidden hover:shadow-card-hover transition-shadow border border-gray-100 text-left"
                   onClick={() => onPick(t)}
                 >
-                  <div className="h-40 bg-gray-200 relative">
+                  <div className="h-36 sm:h-40 bg-gray-200 relative">
                     {t.poster_path ? (
                       <img src={`https://image.tmdb.org/t/p/w500${t.poster_path}`} alt={t.title} className="w-full h-full object-cover" />
                     ) : (
@@ -224,29 +223,47 @@ export default function SevenDegreesPage() {
 
       {(win || lose) && initData && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-xl font-bold text-brand-black mb-2">{win ? 'You did it!' : 'Out of moves'}</h3>
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+            <button
+              aria-label="Close"
+              className="absolute right-3 top-3 text-gray-600 hover:text-brand-black"
+              onClick={() => { setWin(false); setLose(false); }}
+            >
+              ×
+            </button>
+            <h3 className="text-xl font-bold text-brand-black mb-2">{win ? 'Congratulations' : 'Out of moves'}</h3>
             <p className="text-gray-700 mb-4">
-              {win ? 'You reached the target actor within the move limit.' : 'Try again with a new seed or share your attempt.'}
+              {win
+                ? 'You achieved seven degrees of Kevin Bacon! Why not share with your friends and see if they can match your skills'
+                : 'Try again with a new seed or share your attempt.'}
             </p>
             <div className="space-y-3">
-              <div className="bg-gray-50 border rounded p-2 text-sm break-all">{shareUrl}</div>
+              <div className="bg-gray-50 border rounded p-2 text-sm break-all text-brand-black">{shareUrl}</div>
               <div className="flex gap-2">
                 <button onClick={() => navigator.clipboard.writeText(shareUrl)} className="px-3 py-2 rounded bg-brand-black text-white text-sm">Copy share link</button>
                 <a
-                  className="px-3 py-2 rounded bg-brand-red text-white text-sm"
+                  className="px-3 py-2 rounded bg-brand-red text-black text-sm"
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('I played Seven Degrees on Whats on Where!')}&url=${encodeURIComponent(shareUrl)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   Share on X
                 </a>
-                <button onClick={reset} className="px-3 py-2 rounded bg-gray-200 text-sm">Play again</button>
+                <a
+                  className="px-3 py-2 rounded bg-blue-600 text-white text-sm"
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent('I achieved Seven Degrees of Kevin Bacon on Whats on Where!')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Share on Facebook
+                </a>
+                <button onClick={reset} className="px-3 py-2 rounded bg-green-600 text-white text-sm hover:brightness-95">Play again</button>
               </div>
             </div>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
