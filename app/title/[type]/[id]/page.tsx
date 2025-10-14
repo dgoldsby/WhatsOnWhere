@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { getDetails, getCredits, getExternalIds, getWatchProviders } from '@/lib/tmdb';
 import { getImdbSummaryByImdbId } from '@/lib/imdb';
 import { getStreamingAvailabilityByImdbId } from '@/lib/streamingAvailability';
+import WatchNowButton from '@/components/WatchNowButton';
 
 function pickRegionStreamingInfo(streamingAvailability: any, region?: string): { key?: string; offers?: any[] } {
   if (!streamingAvailability?.streamingInfo) return {};
@@ -122,6 +123,11 @@ export default async function TitlePage({ params, searchParams }: { params: { ty
           )}
 
           <div className="space-y-6">
+            {regionInfo?.offers && Array.isArray(regionInfo.offers) && regionInfo.offers.length > 0 && (
+              <div>
+                <WatchNowButton offers={regionInfo.offers as any} />
+              </div>
+            )}
             {regionInfo?.offers && (
               <div>
                 <h2 className="text-lg font-semibold text-brand-black mb-2">Where to watch{regionInfo.key ? ` (${regionInfo.key.toUpperCase()})` : ''}</h2>

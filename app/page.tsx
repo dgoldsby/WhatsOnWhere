@@ -9,11 +9,13 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
+    setHasSearched(true);
     setIsLoading(true);
     setError(null);
 
@@ -49,7 +51,7 @@ export default function Home() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setHasSearched(false); }}
               placeholder="Search for a movie or TV show..."
               className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-black"
             />
@@ -117,7 +119,7 @@ export default function Home() {
           </div>
         )}
 
-        {searchResults.length === 0 && !isLoading && searchQuery && (
+        {searchResults.length === 0 && !isLoading && hasSearched && (
           <div className="text-center text-gray-500 mt-12">
             No results found for "{searchQuery}"
           </div>
