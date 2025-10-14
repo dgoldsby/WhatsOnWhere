@@ -177,3 +177,25 @@ export async function getRecommendations(type: MediaType, id: number): Promise<A
       release_year: r.release_date ? Number(String(r.release_date).slice(0, 4)) : (r.first_air_date ? Number(String(r.first_air_date).slice(0, 4)) : undefined),
     }));
 }
+
+export async function getRandomPopularTitle(type: MediaType, seed?: number): Promise<{ id: number; media_type: MediaType; title: string; poster_path: string | null; release_year?: number }> {
+  const path = type === 'movie' ? '/movie/popular' : '/tv/popular';
+  const page = seed ? (Math.abs(seed) % 5) + 1 : Math.floor(Math.random() * 5) + 1;
+  const data = await tmdbFetch<any>(path, { page });
+  const results = Array.isArray(data?.results) ? data.results : [];
+  const idx = results.length > 0 ? (seed ? Math.abs((seed * 9301 + 49297) % results.length) : Math.floor(Math.random() * results.length)) : 0;
+  const r = results[Math.max(0, Math.min(idx, Math.max(0, results.length - 1)))] || results[0];
+  return {
+    id: r.id,
+    media_type: type,
+    title: r.title || r.name,
+    poster_path: r.poster_path || null,
+    release_year: r.release_date ? Number(String(r.release_date).slice(0, 4)) : (r.first_air_date ? Number(String(r.first_air_date).slice(0, 4)) : undefined),
+  };
+}
+
+export async function getPopularPeople(page = 1): Promise<Array<{ id: number; name: string; profile_path: string | null }>> {
+  const data = await tmdbFetch<any>('/person/popular', { page });
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return results.map((p: any) => ({ id: p.id, name: p.name, profile_path: p.profile_path || null }));
+}

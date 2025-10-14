@@ -63,6 +63,11 @@ export default function Home() {
               {isLoading ? 'Searching...' : 'Search'}
             </button>
           </form>
+          <div className="mt-4 text-center">
+            <Link href="/game/seven-degrees" className="inline-block px-4 py-2 rounded bg-brand-yellow text-black text-sm font-semibold shadow-card hover:brightness-95 border border-gray-200">
+              NEW — Play "Seven Degrees" →
+            </Link>
+          </div>
         </div>
 
         {error && (
