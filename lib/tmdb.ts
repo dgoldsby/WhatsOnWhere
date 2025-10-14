@@ -115,3 +115,65 @@ export async function getWatchProviders(type: MediaType, id: number): Promise<Av
   if (!availability.flatrate && !availability.buy && !availability.rent) return undefined;
   return availability;
 }
+
+// Person helpers for "Also starred in"
+export async function getPerson(personId: number): Promise<{ id: number; name: string; profile_path: string | null } | undefined> {
+  const data = await tmdbFetch<any>(`/person/${personId}`);
+  return {
+    id: data.id,
+    name: data.name,
+    profile_path: data.profile_path || null,
+  };
+}
+
+export async function getPersonCombinedCredits(personId: number): Promise<Array<{ id: number; media_type: MediaType; title: string; poster_path: string | null; character?: string; release_year?: number }>> {
+  const data = await tmdbFetch<any>(`/person/${personId}/combined_credits`);
+  const cast = Array.isArray(data?.cast) ? data.cast : [];
+  const mapped = cast
+    .filter((c: any) => c.media_type === 'movie' || c.media_type === 'tv')
+    .map((c: any) => ({
+      id: c.id,
+      media_type: c.media_type,
+      title: c.title || c.name,
+      poster_path: c.poster_path || null,
+      character: c.character || undefined,
+      release_year: c.release_date ? Number(String(c.release_date).slice(0, 4)) : (c.first_air_date ? Number(String(c.first_air_date).slice(0, 4)) : undefined),
+    }));
+  // Deduplicate by id keeping first occurrence
+  const seen = new Set<number>();
+  const dedup: any[] = [];
+  for (const m of mapped) {
+    if (!seen.has(m.id)) { seen.add(m.id); dedup.push(m); }
+  }
+  return dedup;
+}
+
+export async function getSimilar(type: MediaType, id: number): Promise<Array<{ id: number; media_type: MediaType; title: string; poster_path: string | null; release_year?: number }>> {
+  const path = type === 'movie' ? `/movie/${id}/similar` : `/tv/${id}/similar`;
+  const data = await tmdbFetch<any>(path);
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return results
+    .filter((r: any) => r)
+    .map((r: any) => ({
+      id: r.id,
+      media_type: type,
+      title: r.title || r.name,
+      poster_path: r.poster_path || null,
+      release_year: r.release_date ? Number(String(r.release_date).slice(0, 4)) : (r.first_air_date ? Number(String(r.first_air_date).slice(0, 4)) : undefined),
+    }));
+}
+
+export async function getRecommendations(type: MediaType, id: number): Promise<Array<{ id: number; media_type: MediaType; title: string; poster_path: string | null; release_year?: number }>> {
+  const path = type === 'movie' ? `/movie/${id}/recommendations` : `/tv/${id}/recommendations`;
+  const data = await tmdbFetch<any>(path);
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return results
+    .filter((r: any) => r)
+    .map((r: any) => ({
+      id: r.id,
+      media_type: type,
+      title: r.title || r.name,
+      poster_path: r.poster_path || null,
+      release_year: r.release_date ? Number(String(r.release_date).slice(0, 4)) : (r.first_air_date ? Number(String(r.first_air_date).slice(0, 4)) : undefined),
+    }));
+}

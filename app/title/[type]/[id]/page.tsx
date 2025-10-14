@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { getDetails, getCredits, getExternalIds, getWatchProviders } from '@/lib/tmdb';
+import Link from 'next/link';
+import { getDetails, getCredits, getExternalIds, getWatchProviders, getSimilar, getRecommendations } from '@/lib/tmdb';
 import { getImdbSummaryByImdbId } from '@/lib/imdb';
 import { getStreamingAvailabilityByImdbId } from '@/lib/streamingAvailability';
 import WatchNowButton from '@/components/WatchNowButton';
@@ -38,11 +39,13 @@ export default async function TitlePage({ params, searchParams }: { params: { ty
   }
 
   // Fetch data server-side directly from libs to avoid relative fetch issues
-  const [details, credits, providers, external] = await Promise.all([
+  const [details, credits, providers, external, similar, recs] = await Promise.all([
     getDetails(type as any, numericId),
     getCredits(type as any, numericId),
     getWatchProviders(type as any, numericId),
     getExternalIds(type as any, numericId),
+    getSimilar(type as any, numericId).catch(() => []),
+    getRecommendations(type as any, numericId).catch(() => []),
   ]);
 
   let imdbSummary: any = undefined;
@@ -113,16 +116,23 @@ export default async function TitlePage({ params, searchParams }: { params: { ty
 
           {cast.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-brand-black mb-2">Top cast</h2>
+              <h2 className="text-lg font-semibold text-brand-black mb-2">Top cast (click on an actor for more)</h2>
               <div className="flex flex-wrap gap-3">
                 {cast.map((c: any) => (
-                  <span key={c.id} className="text-sm bg-gray-100 px-2 py-1 rounded">{c.name}{c.character ? ` as ${c.character}` : ''}</span>
+                  <Link
+                    href={`/person/${c.id}`}
+                    key={c.id}
+                    className="text-sm bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 hover:underline cursor-pointer"
+                    title="View filmography"
+                  >
+                    {c.name}{c.character ? ` as ${c.character}` : ''}
+                  </Link>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="space-y-6">
+          <div className="space-y-10">
             {regionInfo?.offers && Array.isArray(regionInfo.offers) && regionInfo.offers.length > 0 && (
               <div>
                 <WatchNowButton offers={regionInfo.offers as any} />
@@ -175,6 +185,52 @@ export default async function TitlePage({ params, searchParams }: { params: { ty
                   {(!providers.flatrate || providers.flatrate.length === 0) && (providers.buy || providers.rent) && (
                     <span className="text-xs text-gray-600">Available to buy/rent</span>
                   )}
+                </div>
+              </div>
+            )}
+
+            {Array.isArray(similar) && similar.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-brand-black mb-2">Similar</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {similar.slice(0, 12).map((m: any) => (
+                    <Link href={`/title/${m.media_type}/${m.id}`} key={`sim-${m.media_type}-${m.id}`} className="bg-white rounded-lg shadow-card overflow-hidden hover:shadow-card-hover transition-shadow border border-gray-100 block">
+                      <div className="h-48 bg-gray-200 relative">
+                        {m.poster_path ? (
+                          <img src={`https://image.tmdb.org/t/p/w500${m.poster_path}`} alt={m.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="text-md font-semibold text-brand-black">{m.title}</h3>
+                        <p className="text-gray-600 text-xs">{m.media_type === 'movie' ? 'Movie' : 'TV Show'}{m.release_year ? ` • ${m.release_year}` : ''}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {Array.isArray(recs) && recs.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-brand-black mb-2">Recommended</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {recs.slice(0, 12).map((m: any) => (
+                    <Link href={`/title/${m.media_type}/${m.id}`} key={`rec-${m.media_type}-${m.id}`} className="bg-white rounded-lg shadow-card overflow-hidden hover:shadow-card-hover transition-shadow border border-gray-100 block">
+                      <div className="h-48 bg-gray-200 relative">
+                        {m.poster_path ? (
+                          <img src={`https://image.tmdb.org/t/p/w500${m.poster_path}`} alt={m.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <h3 className="text-md font-semibold text-brand-black">{m.title}</h3>
+                        <p className="text-gray-600 text-xs">{m.media_type === 'movie' ? 'Movie' : 'TV Show'}{m.release_year ? ` • ${m.release_year}` : ''}</p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
             )}
