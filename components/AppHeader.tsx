@@ -1,31 +1,6 @@
-'use client';
-
 import Image from 'next/image';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import SearchBar from './SearchBar';
-import { useCallback, useMemo } from 'react';
 
 export default function AppHeader() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Hide header on home page as requested
-  if (pathname === '/') return null;
-
-  const q = searchParams.get('q') || '';
-
-  const onSubmit = useCallback(
-    (value?: string) => {
-      const term = (value ?? q).trim();
-      if (!term) return;
-      const params = new URLSearchParams();
-      params.set('q', term);
-      router.push(`/?${params.toString()}`);
-    },
-    [router, q]
-  );
-
   return (
     <header className="w-full border-b border-gray-200 bg-white">
       <div className="container mx-auto px-4 py-3 flex items-center gap-3">
@@ -34,14 +9,17 @@ export default function AppHeader() {
           <span className="font-semibold text-brand-black hidden sm:inline">Whats on Where</span>
         </a>
         <div className="flex-1" />
-        <div className="w-full max-w-md">
-          <SearchBar
-            value={q}
-            onChange={() => { /* controlled via query; no-op */ }}
-            onSubmit={() => onSubmit()}
-            size="small"
+        <form method="get" action="/" className="w-full max-w-md flex gap-2">
+          <input
+            type="text"
+            name="q"
+            placeholder="Search for a movie or TV show..."
+            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-black"
           />
-        </div>
+          <button type="submit" className="bg-brand-red text-white rounded-lg px-4 py-2 text-sm hover:brightness-95">
+            Search
+          </button>
+        </form>
       </div>
     </header>
   );

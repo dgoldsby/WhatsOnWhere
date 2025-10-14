@@ -23,12 +23,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const disableHeader = process.env.NEXT_PUBLIC_DISABLE_HEADER === '1';
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50`}>
-        <Suspense fallback={null}>
-          <AppHeader />
-        </Suspense>
+        {!disableHeader && (
+          <Suspense fallback={null}>
+            <AppHeader />
+          </Suspense>
+        )}
         {children}
         <ServiceWorkerRegister />
       </body>

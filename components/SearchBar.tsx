@@ -5,7 +5,7 @@ import { useState } from 'react';
 type Props = {
   value?: string;
   onChange?: (v: string) => void;
-  onSubmit?: () => void;
+  onSubmit?: (v: string) => void;
   placeholder?: string;
   size?: 'large' | 'small';
   disabled?: boolean;
@@ -19,7 +19,7 @@ export default function SearchBar({ value, onChange, onSubmit, placeholder = 'Se
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!val.trim()) return;
-    onSubmit?.();
+    onSubmit?.(val);
   };
 
   const baseInput = 'flex-1 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-black';
