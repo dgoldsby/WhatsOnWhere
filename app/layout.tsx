@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
-import dynamic from 'next/dynamic';
-
-const AppHeader = dynamic(() => import('@/components/AppHeader'), { ssr: false });
+import AppHeader from '@/components/AppHeader';
+import { Suspense } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -27,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50`}>
-        <AppHeader />
+        <Suspense fallback={null}>
+          <AppHeader />
+        </Suspense>
         {children}
         <ServiceWorkerRegister />
       </body>
