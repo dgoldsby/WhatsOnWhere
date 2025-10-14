@@ -1,6 +1,27 @@
 import Image from 'next/image';
+import { headers } from 'next/headers';
 
 export default function AppHeader() {
+  const h = headers();
+  const path =
+    h.get('x-matched-path') ||
+    h.get('x-invoke-path') ||
+    h.get('next-url') ||
+    '';
+
+  // Hide on home page
+  if (path === '/') return null;
+
+  // Allow future hiding via CSV prefixes (e.g., "/admin,/auth")
+  const csv = process.env.NEXT_PUBLIC_SEARCH_HIDE_PREFIXES || '';
+  if (csv) {
+    const prefixes = csv
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (prefixes.some((p) => path.startsWith(p))) return null;
+  }
+
   return (
     <header className="w-full border-b border-gray-200 bg-white">
       <div className="container mx-auto px-4 py-3 flex items-center gap-3">

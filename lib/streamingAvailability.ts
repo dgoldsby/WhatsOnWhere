@@ -3,10 +3,12 @@
 // Use the v3 endpoint: GET /shows/{id} where id can be an IMDb ID (e.g., tt0068646)
 
 export interface SAOffer {
-  service: string; // e.g., netflix, prime, etc.
-  streamingType: string; // subscription | buy | rent | free | ads
-  link: string; // deep link to platform
-  quality?: string; // e.g., hd, 4k (if present)
+  service?: string;
+  streamingType?: 'subscription' | 'buy' | 'rent' | 'free' | 'ads';
+  link?: string;
+  videoLink?: string;
+  quality?: string;
+  price?: number;
   audios?: Array<{ language?: string; region?: string }>;
   subtitles?: Array<{ language?: string; region?: string }>;
 }
@@ -56,7 +58,75 @@ export async function getStreamingAvailabilityByImdbId(
     clearTimeout(timeout);
     if (!res.ok) return undefined;
     const data = await res.json();
-    return data as SAResult;
+
+    // Normalize shapes:
+    // - Old: data.streamingInfo (object keyed by country or flat array when ?country)
+    // - New: data.streamingOptions (object keyed by lowercase country with offer objects containing { service: {id,name,...}, type, link })
+    const result: SAResult = data as SAResult;
+
+    // If streamingInfo already present, keep it
+    if ((result as any).streamingInfo) {
+      // But coerce any service objects to string if necessary
+      const si: any = (result as any).streamingInfo;
+      if (Array.isArray(si)) {
+        (result as any).streamingInfo = si.map((o: any) => ({
+          ...o,
+          service: typeof o?.service === 'object' ? (o.service.name || o.service.id) : o?.service,
+          streamingType: o?.streamingType || o?.type,
+          link: o?.link,
+        }));
+      } else if (si && typeof si === 'object') {
+        const normalized: Record<string, SAOffer[]> = {};
+        for (const [cc, offers] of Object.entries(si)) {
+          if (Array.isArray(offers)) {
+            normalized[cc] = offers.map((o: any) => ({
+              ...o,
+              service: typeof o?.service === 'object' ? (o.service.name || o.service.id) : o?.service,
+              streamingType: o?.streamingType || o?.type,
+              link: o?.link,
+            }));
+          }
+        }
+        (result as any).streamingInfo = normalized;
+      }
+      return result;
+    }
+
+    // Fallback to streamingOptions
+    const so: any = (data as any)?.streamingOptions;
+    if (so && typeof so === 'object') {
+      // If a specific country was requested, RapidAPI still returns only that key
+      // We normalize to flat array in that case
+      if (country) {
+        const arr: any[] = so[country.toLowerCase()] || so[country] || [];
+        (result as any).streamingInfo = Array.isArray(arr)
+          ? arr.map((o: any) => ({
+              service: typeof o?.service === 'object' ? (o.service.name || o.service.id) : o?.service,
+              streamingType: o?.type,
+              link: o?.link,
+              videoLink: o?.videoLink,
+              quality: o?.quality,
+            }))
+          : [];
+      } else {
+        const normalized: Record<string, SAOffer[]> = {};
+        for (const [cc, offers] of Object.entries(so)) {
+          if (Array.isArray(offers)) {
+            normalized[String(cc).toUpperCase()] = offers.map((o: any) => ({
+              service: typeof o?.service === 'object' ? (o.service.name || o.service.id) : o?.service,
+              streamingType: o?.type,
+              link: o?.link,
+              videoLink: o?.videoLink,
+              quality: o?.quality,
+            }));
+          }
+        }
+        (result as any).streamingInfo = normalized;
+      }
+      return result;
+    }
+
+    return result;
   } catch {
     clearTimeout(timeout);
     return undefined;

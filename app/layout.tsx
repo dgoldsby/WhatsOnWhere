@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
-import AppHeader from '@/components/AppHeader';
 import { Suspense } from 'react';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -27,11 +26,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50`}>
-        {!disableHeader && (
-          <Suspense fallback={null}>
-            <AppHeader />
-          </Suspense>
-        )}
         {children}
         <ServiceWorkerRegister />
       </body>
