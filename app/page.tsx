@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,17 +11,15 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const searchParams = useSearchParams();
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
+  const runSearch = async (query: string) => {
+    if (!query.trim()) return;
     setHasSearched(true);
     setIsLoading(true);
     setError(null);
-
     try {
-      const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         throw new Error(err?.error || 'Search failed');
@@ -33,6 +32,22 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    runSearch(searchQuery);
+  };
+
+  useEffect(() => {
+    const q = searchParams?.get('q');
+    if (q && q !== searchQuery) {
+      setSearchQuery(q);
+      // Kick off search for q arrived via header form
+      runSearch(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-white">

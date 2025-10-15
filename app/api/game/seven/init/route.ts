@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCredits, getPerson, getRandomPopularTitle } from '@/lib/tmdb';
+import { getCredits, getPerson, getRandomPopularTitle, getDetails } from '@/lib/tmdb';
 import type { MediaType } from '@/types/media';
 
 export async function GET(request: Request) {
@@ -7,28 +7,60 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const seedStr = searchParams.get('seed');
     const seed = seedStr ? Number(seedStr) : undefined;
+    const targetKind = (searchParams.get('targetKind') || '').toLowerCase(); // 'person' | 'title'
+    const targetIdStr = searchParams.get('targetId');
+    const targetId = targetIdStr ? Number(targetIdStr) : undefined;
+    const targetMediaType = (searchParams.get('targetMediaType') as MediaType) || undefined;
 
     // Randomly choose type for start title
     const type: MediaType = Math.random() < 0.5 ? 'movie' : 'tv';
     let start = await getRandomPopularTitle(type, seed);
 
-    // Always use Kevin Bacon (TMDB person id 4724) as target
-    const KEVIN_BACON_ID = 4724;
-    const kevin = await getPerson(KEVIN_BACON_ID);
-    if (!kevin) throw new Error('Failed to load Kevin Bacon details');
+    // Determine target
+    let target:
+      | { kind: 'person'; id: number; name: string; profile_path: string | null }
+      | { kind: 'title'; id: number; media_type: MediaType; title: string; poster_path: string | null };
 
-    // Ensure start title does not already include Kevin Bacon; if it does, re-pick a few times
+    if (targetKind === 'person' && typeof targetId === 'number' && !Number.isNaN(targetId)) {
+      const person = await getPerson(targetId);
+      if (!person) throw new Error('Failed to load target person');
+      target = { kind: 'person', id: person.id, name: person.name, profile_path: person.profile_path };
+    } else if (
+      targetKind === 'title' && typeof targetId === 'number' && !Number.isNaN(targetId) && targetMediaType
+    ) {
+      const t = await getDetails(targetMediaType, targetId);
+      if (!t) throw new Error('Failed to load target title');
+      target = {
+        kind: 'title',
+        id: t.id,
+        media_type: targetMediaType,
+        title: t.title,
+        poster_path: t.poster_path || null,
+      } as any;
+    } else {
+      // Default to Kevin Bacon (TMDB person id 4724)
+      const KEVIN_BACON_ID = 4724;
+      const kevin = await getPerson(KEVIN_BACON_ID);
+      if (!kevin) throw new Error('Failed to load Kevin Bacon details');
+      target = { kind: 'person', id: kevin.id, name: kevin.name, profile_path: kevin.profile_path };
+    }
+
+    // Avoid trivial starts
     for (let attempts = 0; attempts < 5; attempts++) {
-      const startCredits = await getCredits(type, start.id).catch(() => undefined);
-      const inCast = (startCredits?.cast || []).some((c: any) => c.id === KEVIN_BACON_ID);
-      if (!inCast) break;
+      if (target.kind === 'person') {
+        const startCredits = await getCredits(type, start.id).catch(() => undefined);
+        const inCast = (startCredits?.cast || []).some((c: any) => c.id === target.id);
+        if (!inCast) break;
+      } else if (target.kind === 'title') {
+        if (start.id !== target.id) break;
+      }
       start = await getRandomPopularTitle(type, (seed ?? Date.now()) + attempts + 1);
     }
 
     const payload = {
       seed: seed ?? Math.floor(Math.random() * 1e9),
       start: { kind: 'title' as const, ...start },
-      target: { kind: 'person' as const, id: kevin.id, name: kevin.name, profile_path: kevin.profile_path },
+      target,
       moves: 7,
     };
     return NextResponse.json(payload, { status: 200 });
@@ -36,3 +68,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: e?.message || 'Failed to init game' }, { status: 500 });
   }
 }
+

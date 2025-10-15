@@ -11,7 +11,7 @@ type PersonNode = { kind: 'person'; id: number; name: string; profile_path: stri
 type InitPayload = {
   seed: number;
   start: TitleNode;
-  target: PersonNode;
+  target: PersonNode | TitleNode;
   moves: number;
 };
 
@@ -28,6 +28,9 @@ function useQueryParam(name: string) {
 
 export default function SevenDegreesPage() {
   const seedParam = useQueryParam('seed');
+  const targetKindParam = useQueryParam('targetKind');
+  const targetIdParam = useQueryParam('targetId');
+  const targetMediaTypeParam = useQueryParam('targetMediaType');
   const [loading, setLoading] = useState(true);
   const [initData, setInitData] = useState<InitPayload | null>(null);
   const [path, setPath] = useState<Array<TitleNode | PersonNode>>([]);
@@ -35,12 +38,34 @@ export default function SevenDegreesPage() {
   const [movesLeft, setMovesLeft] = useState(7);
   const [win, setWin] = useState(false);
   const [lose, setLose] = useState(false);
+  const [actorQuery, setActorQuery] = useState('');
+  const [actorResults, setActorResults] = useState<Array<{ id: number; name: string; profile_path: string | null }>>([]);
+  const [searching, setSearching] = useState(false);
+
+  const doActorSearch = async () => {
+    const q = actorQuery.trim();
+    if (!q) { setActorResults([]); return; }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/search?query=${encodeURIComponent(q)}&only=person`);
+      const data = await res.json();
+      const people = Array.isArray(data?.results) ? data.results.slice(0, 12) : [];
+      setActorResults(people.map((p: any) => ({ id: p.id, name: p.name, profile_path: p.profile_path || null })));
+    } finally {
+      setSearching(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
     const run = async () => {
       setLoading(true);
-      const qs = seedParam ? `?seed=${encodeURIComponent(seedParam)}` : '';
+      const params = new URLSearchParams();
+      if (seedParam) params.set('seed', seedParam);
+      if (targetKindParam) params.set('targetKind', targetKindParam);
+      if (targetIdParam) params.set('targetId', targetIdParam);
+      if (targetMediaTypeParam) params.set('targetMediaType', targetMediaTypeParam);
+      const qs = params.toString() ? `?${params.toString()}` : '';
       const res = await fetch(`/api/game/seven/init${qs}`);
       if (!res.ok) return;
       const data: InitPayload = await res.json();
@@ -56,7 +81,7 @@ export default function SevenDegreesPage() {
     };
     run();
     return () => { active = false; };
-  }, [seedParam]);
+  }, [seedParam, targetKindParam, targetIdParam, targetMediaTypeParam]);
 
   const current = path[path.length - 1] as TitleNode | PersonNode | undefined;
 
@@ -70,7 +95,10 @@ export default function SevenDegreesPage() {
   const onPick = async (node: TitleNode | PersonNode) => {
     if (win || lose || loading) return;
     if (!initData) return;
-    if (node.kind === 'person' && node.id === initData.target.id) {
+    if (
+      (node.kind === 'person' && initData.target.kind === 'person' && node.id === initData.target.id) ||
+      (node.kind === 'title' && initData.target.kind === 'title' && node.id === initData.target.id)
+    ) {
       setPath((p) => [...p, node]);
       setWin(true);
       return;
@@ -92,6 +120,20 @@ export default function SevenDegreesPage() {
     window.location.href = '/game/seven-degrees';
   };
 
+  useEffect(() => {
+    const t = setTimeout(() => { doActorSearch(); }, 300);
+    return () => clearTimeout(t);
+  }, [actorQuery]);
+
+  const startWithActor = (personId: number) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('targetKind', 'person');
+    url.searchParams.set('targetId', String(personId));
+    url.searchParams.delete('targetMediaType');
+    url.searchParams.delete('seed');
+    window.location.href = url.toString();
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
@@ -100,7 +142,39 @@ export default function SevenDegreesPage() {
         <Link href="/settings" className="text-sm text-brand-black hover:underline">Settings</Link>
       </div>
 
-      <h1 className="text-3xl font-extrabold text-brand-black mb-4">Seven Degrees of Kevin Bacon</h1>
+      <h1 className="text-3xl font-extrabold text-brand-black mb-4">Seven Degrees</h1>
+
+      <div className="mb-6">
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
+            value={actorQuery}
+            onChange={(e) => setActorQuery(e.target.value)}
+            placeholder="Search destination actor (defaults to Kevin Bacon)"
+            className="border border-gray-300 rounded px-3 py-2 text-sm w-full max-w-md"
+            aria-label="Search destination actor"
+          />
+          <button onClick={doActorSearch} className="px-3 py-2 rounded bg-brand-black text-white text-sm">Search</button>
+          {searching && <span className="text-xs text-gray-600">Searching…</span>}
+        </div>
+        {actorResults.length > 0 && (
+          <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            {actorResults.map((p) => (
+              <button key={p.id} onClick={() => startWithActor(p.id)} className="bg-white rounded border border-gray-200 p-2 text-left hover:bg-gray-50">
+                <div className="h-28 bg-gray-200 mb-2">
+                  {p.profile_path ? (
+                    <img src={`https://image.tmdb.org/t/p/w300${p.profile_path}`} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                  )}
+                </div>
+                <div className="text-sm text-brand-black line-clamp-2">{p.name}</div>
+                <div className="text-xs text-gray-600">Set as destination</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {initData && (
         <div className="mb-6">
@@ -122,15 +196,25 @@ export default function SevenDegreesPage() {
 
             <div className="bg-white rounded-lg shadow-card border border-gray-100 overflow-hidden">
               <div className="h-32 sm:h-36 bg-gray-200 relative">
-                {initData.target.profile_path ? (
-                  <img src={`https://image.tmdb.org/t/p/w500${initData.target.profile_path}`} alt={initData.target.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
-                )}
+                {initData.target.kind === 'person'
+                  ? (
+                    initData.target.profile_path ? (
+                      <img src={`https://image.tmdb.org/t/p/w500${initData.target.profile_path}`} alt={initData.target.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                    )
+                  )
+                  : (
+                    initData.target.poster_path ? (
+                      <img src={`https://image.tmdb.org/t/p/w500${(initData.target as any).poster_path}`} alt={(initData.target as any).title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                    )
+                  )}
               </div>
               <div className="p-3">
-                <div className="text-sm font-semibold text-brand-black">Target actor</div>
-                <div className="text-brand-black text-sm">{initData.target.name}</div>
+                <div className="text-sm font-semibold text-brand-black">{initData.target.kind === 'person' ? 'Target actor' : 'Target title'}</div>
+                <div className="text-brand-black text-sm">{initData.target.kind === 'person' ? (initData.target as any).name : (initData.target as any).title}</div>
               </div>
             </div>
           </div>
@@ -235,7 +319,7 @@ export default function SevenDegreesPage() {
             <p className="text-gray-700 mb-4">
               {win
                 ? 'You achieved seven degrees of Kevin Bacon! Why not share with your friends and see if they can match your skills'
-                : 'Try again with a new seed or share your attempt.'}
+                : 'Try again in another round or share your attempt.'}
             </p>
             <div className="space-y-3">
               <div className="bg-gray-50 border rounded p-2 text-sm break-all text-brand-black">{shareUrl}</div>

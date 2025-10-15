@@ -66,6 +66,12 @@ export async function searchMulti(query: string): Promise<UnifiedSearchResult[]>
   return withProviders;
 }
 
+export async function searchPeople(query: string): Promise<Array<{ id: number; name: string; profile_path: string | null }>> {
+  const data = await tmdbFetch<any>('/search/person', { query, include_adult: 'false', page: 1 });
+  const results = Array.isArray(data?.results) ? data.results : [];
+  return results.map((p: any) => ({ id: p.id, name: p.name, profile_path: p.profile_path || null }));
+}
+
 export async function getDetails(type: MediaType, id: number): Promise<DetailResponse> {
   const path = type === 'movie' ? `/movie/${id}` : `/tv/${id}`;
   const data = await tmdbFetch<any>(path);

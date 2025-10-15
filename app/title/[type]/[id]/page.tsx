@@ -4,6 +4,7 @@ import { getDetails, getCredits, getExternalIds, getWatchProviders, getSimilar, 
 import { getImdbSummaryByImdbId } from '@/lib/imdb';
 import { getStreamingAvailabilityByImdbId } from '@/lib/streamingAvailability';
 import WatchNowButton from '@/components/WatchNowButton';
+import { providerSlugFromName, hasAffiliate } from '@/lib/affiliates';
 
 function pickRegionStreamingInfo(streamingAvailability: any, region?: string): { key?: string; offers?: any[] } {
   if (!streamingAvailability?.streamingInfo) return {};
@@ -95,6 +96,15 @@ export default async function TitlePage({ params, searchParams }: { params: { ty
           </p>
           <p className="text-gray-700 mb-6">{details?.overview}</p>
 
+          <div className="mb-6">
+            <Link
+              href={`/game/seven-degrees?targetKind=title&targetId=${numericId}&targetMediaType=${type}`}
+              className="inline-flex items-center px-3 py-2 rounded bg-brand-black text-white text-sm hover:brightness-95"
+            >
+              Start Seven Degrees with this title
+            </Link>
+          </div>
+
           <form method="get" className="mb-6">
             <label htmlFor="country" className="mr-2 text-sm text-gray-700">Region:</label>
             <select id="country" name="country" defaultValue={selectedCountry} className="border rounded px-2 py-1 text-sm">
@@ -164,12 +174,30 @@ export default async function TitlePage({ params, searchParams }: { params: { ty
                   {(providers.flatrate || [])
                     .slice(0, 12)
                     .map((p: any) => {
+                      const slug = providerSlugFromName(p.provider_name);
+                      const affiliate = hasAffiliate(p.provider_name, selectedCountry);
+                      const goHref = affiliate && slug
+                        ? `/go/${slug}?id=${numericId}&type=${type}&region=${selectedCountry}${external?.imdb_id ? `&imdb=${external.imdb_id}` : ''}`
+                        : undefined;
+                      if (goHref) {
+                        return (
+                          <a
+                            key={`flat-${p.provider_id}`}
+                            href={goHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-brand-yellow text-black text-xs px-2 py-1 rounded hover:brightness-95"
+                          >
+                            {p.provider_name}
+                          </a>
+                        );
+                      }
                       const key = normalizeServiceName(p.provider_name);
-                      const href = offerLinkByService[key];
-                      return href ? (
+                      const saHref = offerLinkByService[key];
+                      return saHref ? (
                         <a
                           key={`flat-${p.provider_id}`}
-                          href={href}
+                          href={saHref}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="bg-brand-yellow text-black text-xs px-2 py-1 rounded hover:brightness-95"
