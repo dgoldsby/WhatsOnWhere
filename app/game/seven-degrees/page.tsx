@@ -117,6 +117,8 @@ export default function SevenDegreesPage() {
       }
       setStats(next);
       try { localStorage.setItem('seven_degrees_stats', JSON.stringify(next)); } catch {}
+      // Fire-and-forget analytics log
+      try { fetch('/api/analytics/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: 'seven-degrees', score: win ? usedMoves : 0 }) }); } catch {}
       setCountedOutcome(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

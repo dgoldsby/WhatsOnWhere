@@ -106,6 +106,8 @@ export default function PlayYourMoviesRightPage() {
           setStats(nextStats);
           try { localStorage.setItem('pymr_stats', JSON.stringify(nextStats)); } catch {}
         }
+        // analytics log
+        try { fetch('/api/analytics/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game: 'play-your-movies-right', score: streak }) }); } catch {}
       }
     }, 300);
   };
