@@ -41,6 +41,9 @@ export default function SevenDegreesPage() {
   const [actorQuery, setActorQuery] = useState('');
   const [actorResults, setActorResults] = useState<Array<{ id: number; name: string; profile_path: string | null }>>([]);
   const [searching, setSearching] = useState(false);
+  const [stats, setStats] = useState<{ played: number; won: number; lost: number; quickest?: number }>({ played: 0, won: 0, lost: 0 });
+  const [countedPlayed, setCountedPlayed] = useState(false);
+  const [countedOutcome, setCountedOutcome] = useState(false);
 
   const doActorSearch = async () => {
     const q = actorQuery.trim();
@@ -82,6 +85,42 @@ export default function SevenDegreesPage() {
     run();
     return () => { active = false; };
   }, [seedParam, targetKindParam, targetIdParam, targetMediaTypeParam]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('seven_degrees_stats');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setStats({ played: parsed.played || 0, won: parsed.won || 0, lost: parsed.lost || 0, quickest: parsed.quickest });
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    // Count a play when a game successfully initializes once
+    if (initData && !countedPlayed) {
+      const next = { ...stats, played: (stats.played || 0) + 1 };
+      setStats(next);
+      try { localStorage.setItem('seven_degrees_stats', JSON.stringify(next)); } catch {}
+      setCountedPlayed(true);
+    }
+    // Count outcome when win/lose is first set
+    if (initData && !countedOutcome && (win || lose)) {
+      const usedMoves = Math.max(0, (path.length - 1));
+      const next = { ...stats } as any;
+      if (win) {
+        next.won = (next.won || 0) + 1;
+        next.quickest = typeof next.quickest === 'number' ? Math.min(next.quickest, usedMoves) : usedMoves;
+      }
+      if (lose) {
+        next.lost = (next.lost || 0) + 1;
+      }
+      setStats(next);
+      try { localStorage.setItem('seven_degrees_stats', JSON.stringify(next)); } catch {}
+      setCountedOutcome(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initData, win, lose, path.length]);
 
   const current = path[path.length - 1] as TitleNode | PersonNode | undefined;
 
@@ -138,8 +177,17 @@ export default function SevenDegreesPage() {
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
-        <a href="/" className="text-sm text-brand-black hover:underline">← Back to search</a>
-        <Link href="/settings" className="text-sm text-brand-black hover:underline">Settings</Link>
+        <Link href="/" className="text-sm text-brand-black hover:underline">← Back to search</Link>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3 text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-1">
+            <span>Played: <strong className="text-brand-black">{stats.played || 0}</strong></span>
+            <span>Won: <strong className="text-brand-black">{stats.won || 0}</strong></span>
+            <span>Lost: <strong className="text-brand-black">{stats.lost || 0}</strong></span>
+            <span>Quickest: <strong className="text-brand-black">{typeof stats.quickest === 'number' ? stats.quickest : '—'}</strong></span>
+          </div>
+          <button onClick={reset} className="px-3 py-1 rounded bg-green-600 text-white text-sm hover:brightness-95">Restart game</button>
+          <Link href="/settings" className="text-sm text-brand-black hover:underline">Settings</Link>
+        </div>
       </div>
 
       <h1 className="text-3xl font-extrabold text-brand-black mb-4">Seven Degrees</h1>
@@ -224,6 +272,7 @@ export default function SevenDegreesPage() {
               <span className="text-sm text-gray-700">Moves left</span>
               <span className="text-2xl font-extrabold text-brand-black leading-none">{movesLeft}</span>
             </div>
+            <div className="mt-2 text-xs text-gray-600">Stats — Played: {stats.played || 0} • Won: {stats.won || 0} • Lost: {stats.lost || 0} • Quickest: {typeof stats.quickest === 'number' ? stats.quickest : '—'}</div>
           </div>
         </div>
       )}
@@ -304,6 +353,8 @@ export default function SevenDegreesPage() {
           </div>
         </div>
       )}
+      {/* Close container before modal */}
+      </div>
 
       {(win || lose) && initData && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
@@ -318,12 +369,12 @@ export default function SevenDegreesPage() {
             <h3 className="text-xl font-bold text-brand-black mb-2">{win ? 'Congratulations' : 'Out of moves'}</h3>
             <p className="text-gray-700 mb-4">
               {win
-                ? 'You achieved seven degrees of Kevin Bacon! Why not share with your friends and see if they can match your skills'
-                : 'Try again in another round or share your attempt.'}
+                ? 'You achieved seven degrees! Why not share with your friends and see if they can match your skills'
+                : 'Out of moves. Try again in another round or share your attempt.'}
             </p>
             <div className="space-y-3">
               <div className="bg-gray-50 border rounded p-2 text-sm break-all text-brand-black">{shareUrl}</div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button onClick={() => navigator.clipboard.writeText(shareUrl)} className="px-3 py-2 rounded bg-brand-black text-white text-sm">Copy share link</button>
                 <a
                   className="px-3 py-2 rounded bg-brand-red text-black text-sm"
@@ -335,19 +386,19 @@ export default function SevenDegreesPage() {
                 </a>
                 <a
                   className="px-3 py-2 rounded bg-blue-600 text-white text-sm"
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent('I achieved Seven Degrees of Kevin Bacon on Whats on Where!')}`}
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent('I achieved Seven Degrees on Whats on Where!')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   Share on Facebook
                 </a>
                 <button onClick={reset} className="px-3 py-2 rounded bg-green-600 text-white text-sm hover:brightness-95">Play again</button>
+                <Link href="/" className="px-3 py-2 rounded bg-gray-200 text-brand-black text-sm hover:bg-gray-300">Back to search</Link>
               </div>
             </div>
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }

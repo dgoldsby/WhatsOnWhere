@@ -41,6 +41,12 @@ export default function AppHeader() {
             Search
           </button>
         </form>
+        <a
+          href="/go/prime"
+          className="hidden sm:inline-flex items-center rounded-lg px-3 py-2 text-sm bg-brand-yellow text-black border border-gray-200 hover:brightness-95"
+        >
+          Try Prime Video
+        </a>
       </div>
     </header>
   );

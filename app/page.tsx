@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { hasAffiliate, providerSlugFromName } from '@/lib/affiliates';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +59,9 @@ export default function Home() {
             <Image src="/icon.png" alt="Whats on Where" width={72} height={72} className="rounded-xl shadow-card" priority />
             <h1 className="text-4xl font-extrabold text-brand-black">Whats on Where</h1>
             <p className="text-gray-700">Your one stop shop for streaming</p>
+            <div className="mt-1">
+              <Link href="/games" className="text-sm text-brand-red hover:underline">Explore Games →</Link>
+            </div>
           </div>
         </header>
 
@@ -78,8 +82,18 @@ export default function Home() {
               {isLoading ? 'Searching...' : 'Search'}
             </button>
           </form>
+          {hasAffiliate('amazon prime video', (process.env.DEFAULT_REGION || 'US') as any) && (
+            <div className="mt-4 text-center">
+              <a
+                href={`/go/prime?region=${(process.env.DEFAULT_REGION || 'US')}`}
+                className="inline-block px-4 py-2 rounded bg-brand-yellow text-black text-sm font-semibold shadow-card hover:brightness-95 border border-gray-200"
+              >
+                Try Prime Video — Start your subscription
+              </a>
+            </div>
+          )}
           <div className="mt-4 text-center">
-            <Link href="/game/seven-degrees" className="inline-block px-4 py-2 rounded bg-brand-yellow text-black text-sm font-semibold shadow-card hover:brightness-95 border border-gray-200">
+            <Link href="/games/seven-degrees" className="inline-block px-4 py-2 rounded bg-brand-yellow text-black text-sm font-semibold shadow-card hover:brightness-95 border border-gray-200">
               NEW — Play "Seven Degrees" →
             </Link>
           </div>
@@ -115,6 +129,25 @@ export default function Home() {
                       ? `Movie${item.release_year ? ` • ${item.release_year}` : ''}`
                       : `TV Show${item.release_year ? ` • ${item.release_year}` : ''}`}
                   </p>
+                  {/* Prime promo chip if available */}
+                  {(() => {
+                    const region = (process.env.DEFAULT_REGION || 'US') as string;
+                    const flatrate = (item.providers?.flatrate || []) as any[];
+                    const hasPrimeProvider = flatrate.some((p: any) => providerSlugFromName(p.provider_name) === 'prime');
+                    if (hasAffiliate('amazon prime video', region) && (hasPrimeProvider || true)) {
+                      return (
+                        <div className="mb-2">
+                          <a
+                            href={`/go/prime?id=${item.id}&type=${item.media_type}&region=${region}`}
+                            className="inline-flex items-center px-2 py-1 rounded bg-brand-yellow text-black text-xs font-semibold border border-gray-200 hover:brightness-95"
+                          >
+                            Watch with Prime Video
+                          </a>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                   <p className="text-gray-700 text-sm mb-4 line-clamp-3">{item.overview}</p>
                   {(item.providers?.flatrate || item.providers?.buy || item.providers?.rent) && (
                     <div className="mt-2">

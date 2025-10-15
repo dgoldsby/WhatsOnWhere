@@ -96,6 +96,17 @@ export default async function TitlePage({ params, searchParams }: { params: { ty
           </p>
           <p className="text-gray-700 mb-6">{details?.overview}</p>
 
+          {hasAffiliate('amazon prime video', selectedCountry) && (
+            <div className="mb-4">
+              <a
+                href={`/go/prime?id=${numericId}&type=${type}&region=${selectedCountry}${external?.imdb_id ? `&imdb=${external.imdb_id}` : ''}`}
+                className="inline-flex items-center px-4 py-2 rounded bg-brand-yellow text-black text-sm font-semibold shadow-card hover:brightness-95 border border-gray-200"
+              >
+                Watch with Prime Video
+              </a>
+            </div>
+          )}
+
           <div className="mb-6">
             <Link
               href={`/game/seven-degrees?targetKind=title&targetId=${numericId}&targetMediaType=${type}`}

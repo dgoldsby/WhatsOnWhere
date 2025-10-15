@@ -12,14 +12,15 @@ export async function GET(request: Request, { params }: { params: { provider: st
     const type = (url.searchParams.get('type') as MediaType) || 'movie';
 
     const tmdbId = idParam ? Number(idParam) : NaN;
-    if (!provider || Number.isNaN(tmdbId)) {
+    const isPrime = provider === 'prime';
+    if (!provider || (Number.isNaN(tmdbId) && !isPrime)) {
       return NextResponse.json({ error: 'Invalid params' }, { status: 400 });
     }
 
     const final = resolveAffiliateUrlBySlug(provider, {
       providerName: provider,
       mediaType: type,
-      tmdbId,
+      tmdbId: Number.isNaN(tmdbId) ? 0 : tmdbId,
       imdbId: imdb,
       region,
     });
