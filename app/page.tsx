@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -51,9 +51,10 @@ export default function Home() {
   }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <Suspense fallback={null}>
+      <div className="min-h-screen bg-white">
 
-      <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
           <div className="flex flex-col items-center justify-center gap-3">
             <Image src="/icon.png" alt="Whats on Where" width={72} height={72} className="rounded-xl shadow-card" priority />
@@ -177,14 +178,15 @@ export default function Home() {
             No results found for "{searchQuery}"
           </div>
         )}
-      </main>
+        </main>
 
-      <footer className="bg-brand-black border-t border-gray-200 py-8 mt-12">
-        <div className="container mx-auto px-4 text-center text-gray-600 text-sm">
-          <p className="text-white">© {new Date().getFullYear()} Whats on Where. Data provided by TMDB and JustWatch.</p>
-          <p className="mt-2 text-gray-300">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-        </div>
-      </footer>
-    </div>
+        <footer className="bg-brand-black border-t border-gray-200 py-8 mt-12">
+          <div className="container mx-auto px-4 text-center text-gray-600 text-sm">
+            <p className="text-white">© {new Date().getFullYear()} Whats on Where. Data provided by TMDB and JustWatch.</p>
+            <p className="mt-2 text-gray-300">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+          </div>
+        </footer>
+      </div>
+    </Suspense>
   );
 }

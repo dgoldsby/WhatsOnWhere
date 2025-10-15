@@ -91,5 +91,6 @@ export function resolveAffiliateUrlBySlug(slug: string, args: Omit<ResolverArgs,
 export function resolveAffiliateUrl(args: ResolverArgs): string | undefined {
   const slug = args.providerSlug || providerSlugFromName(args.providerName);
   if (!slug) return undefined;
-  return resolveAffiliateUrlBySlug(slug, { ...args, providerSlug: slug });
+  const { providerSlug: _omit, ...rest } = args as any;
+  return resolveAffiliateUrlBySlug(slug, rest);
 }
