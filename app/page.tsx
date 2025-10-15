@@ -12,7 +12,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const searchParams = useSearchParams();
+  // Note: useSearchParams is consumed inside a Suspense-wrapped child below
 
   const runSearch = async (query: string) => {
     if (!query.trim()) return;
@@ -40,19 +40,19 @@ export default function Home() {
     runSearch(searchQuery);
   };
 
-  useEffect(() => {
-    const q = searchParams?.get('q');
-    if (q && q !== searchQuery) {
-      setSearchQuery(q);
-      // Kick off search for q arrived via header form
-      runSearch(q);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  // Bootstrap query from URL (?q=) using a child that is inside Suspense
+  function SearchBootstrap({ onBoot }: { onBoot: (q: string) => void }) {
+    const sp = useSearchParams();
+    useEffect(() => {
+      const q = sp?.get('q');
+      if (q) onBoot(q);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sp]);
+    return null;
+  }
 
   return (
-    <Suspense fallback={null}>
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
 
         <main className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
@@ -65,6 +65,11 @@ export default function Home() {
             </div>
           </div>
         </header>
+
+        {/* Suspense-wrapped bootstrapper for ?q= */}
+        <Suspense fallback={null}>
+          <SearchBootstrap onBoot={(q) => { setSearchQuery(q); setHasSearched(false); runSearch(q); }} />
+        </Suspense>
 
         <div className="max-w-2xl mx-auto mb-12">
           <form onSubmit={handleSearch} className="flex gap-2">
@@ -187,6 +192,5 @@ export default function Home() {
           </div>
         </footer>
       </div>
-    </Suspense>
   );
 }
