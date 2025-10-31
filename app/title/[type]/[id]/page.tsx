@@ -5,6 +5,7 @@ import { getImdbSummaryByImdbId } from '@/lib/imdb';
 import { getStreamingAvailabilityByImdbId } from '@/lib/streamingAvailability';
 import WatchNowButton from '@/components/WatchNowButton';
 import { providerSlugFromName, hasAffiliate } from '@/lib/affiliates';
+import { detectRegionFromRequest } from '@/lib/region';
 
 function pickRegionStreamingInfo(streamingAvailability: any, region?: string): { key?: string; offers?: any[] } {
   if (!streamingAvailability?.streamingInfo) return {};
@@ -33,7 +34,7 @@ function normalizeServiceName(s: string) {
 
 export default async function TitlePage({ params, searchParams }: { params: { type: string; id: string }, searchParams: { country?: string } }) {
   const { type, id } = params;
-  const selectedCountry = (searchParams?.country || process.env.DEFAULT_REGION || 'US').toUpperCase();
+  const selectedCountry = (searchParams?.country || detectRegionFromRequest() || process.env.DEFAULT_REGION || 'US').toUpperCase();
   const numericId = Number(id);
   if (Number.isNaN(numericId)) {
     throw new Error('Invalid id');

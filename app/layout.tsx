@@ -2,7 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import ThemeRoot from '@/components/ThemeRoot';
+import { cookies } from 'next/headers';
 import { Suspense } from 'react';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,11 +27,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const disableHeader = process.env.NEXT_PUBLIC_DISABLE_HEADER === '1';
+  const region = cookies().get('wow_region')?.value?.toUpperCase() || 'GB';
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-gray-50`}>
-        {children}
+    <html lang="en" data-region={region}>
+      <body className={`${inter.className} bg-[var(--color-bg)] text-[var(--color-text)]`}>
+        <ThemeRoot>
+          {children}
+        </ThemeRoot>
         <ServiceWorkerRegister />
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
       </body>
     </html>
   );

@@ -126,16 +126,16 @@ export default function PlayYourMoviesRightPage() {
   const shareUrl = useMemo(() => typeof window !== 'undefined' ? window.location.href : '', []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold text-brand-black">Play Your Movies Right</h1>
-            <p className="text-gray-700">Guess if the next movie's TMDB rating is higher or lower.</p>
+            <h1 className="text-3xl font-extrabold">Play Your Movies Right</h1>
+            <p className="text-[var(--color-muted)]">Guess if the next movie's TMDB rating is higher or lower.</p>
           </div>
-          <div className="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-1">
-            <span>Games Played: <strong className="text-brand-black">{stats.gamesPlayed}</strong></span>
-            <span className="ml-3">Best Streak: <strong className="text-brand-black">{stats.bestStreak}</strong></span>
+          <div className="text-xs text-[var(--color-muted)] bg-[var(--color-surface)] border border-[rgba(0,0,0,0.06)] rounded px-2 py-1">
+            <span>Games Played: <strong className="text-[var(--color-text)]">{stats.gamesPlayed}</strong></span>
+            <span className="ml-3">Best Streak: <strong className="text-[var(--color-text)]">{stats.bestStreak}</strong></span>
           </div>
         </div>
 
@@ -144,7 +144,7 @@ export default function PlayYourMoviesRightPage() {
             <button
               key={c.key}
               onClick={() => setCategory(c.key)}
-              className={`px-3 py-2 rounded border text-sm ${category === c.key ? 'bg-brand-black text-white border-brand-black' : 'bg-white text-brand-black border-gray-300'}`}
+              className={`px-3 py-2 rounded border text-sm ${category === c.key ? 'bg-[var(--color-brand)] text-black border-transparent' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[rgba(0,0,0,0.1)]'}`}
               disabled={loading}
             >
               {c.label}
@@ -160,9 +160,9 @@ export default function PlayYourMoviesRightPage() {
           <div className="flex justify-center">
             {current && (
               <div className="w-64 h-96 [perspective:1000px]">
-                <div className="relative w-full h-full rounded-xl shadow-card border border-gray-200 bg-white">
+                <div className="relative w-full h-full rounded-xl shadow-[var(--shadow-low)] border border-[rgba(0,0,0,0.06)] bg-[var(--color-surface)]">
                   <div className="p-3 text-center">
-                    <div className="text-brand-black font-semibold line-clamp-2 h-10">{current.title}</div>
+                    <div className="font-semibold line-clamp-2 h-10">{current.title}</div>
                   </div>
                   <div className="px-3">
                     <div className="h-48 bg-gray-200 rounded overflow-hidden">
@@ -174,9 +174,9 @@ export default function PlayYourMoviesRightPage() {
                     </div>
                   </div>
                   <div className="p-3 text-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-gray-100">
-                      <span className="text-sm text-gray-700">TMDB Rating</span>
-                      <span className="text-2xl font-extrabold text-brand-black leading-none">{current.vote_average.toFixed(1)}</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[rgba(0,0,0,0.05)]">
+                      <span className="text-sm text-[var(--color-muted)]">TMDB Rating</span>
+                      <span className="text-2xl font-extrabold leading-none">{current.vote_average.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>
@@ -190,9 +190,9 @@ export default function PlayYourMoviesRightPage() {
               <div className="w-64 h-96 [perspective:1000px]">
                 <div className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${revealed ? '[transform:rotateY(180deg)]' : ''}`}>
                   {/* Back (facing) */}
-                  <div className="absolute inset-0 rounded-xl shadow-card border border-gray-200 bg-white [backface-visibility:hidden] flex flex-col">
+                  <div className="absolute inset-0 rounded-xl shadow-[var(--shadow-low)] border border-[rgba(0,0,0,0.06)] bg-[var(--color-surface)] [backface-visibility:hidden] flex flex-col">
                     <div className="p-3 text-center">
-                      <div className="text-brand-black font-semibold line-clamp-2 h-10">{next.title}</div>
+                      <div className="font-semibold line-clamp-2 h-10">{next.title}</div>
                     </div>
                     <div className="px-3">
                       <div className="h-48 bg-gray-200 rounded overflow-hidden">
@@ -204,14 +204,14 @@ export default function PlayYourMoviesRightPage() {
                       </div>
                     </div>
                     <div className="p-3 text-center">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-gray-100">
-                        <span className="text-sm text-gray-700">TMDB Rating</span>
-                        <span className="text-2xl font-extrabold text-brand-black leading-none">{revealed ? next.vote_average.toFixed(1) : '?'}</span>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[rgba(0,0,0,0.05)]">
+                        <span className="text-sm text-[var(--color-muted)]">TMDB Rating</span>
+                        <span className="text-2xl font-extrabold leading-none">{revealed ? next.vote_average.toFixed(1) : '?'}</span>
                       </div>
                     </div>
                   </div>
                   {/* Front (hidden until flip) */}
-                  <div className="absolute inset-0 rounded-xl shadow-card border border-gray-200 bg-brand-black text-white [transform:rotateY(180deg)] [backface-visibility:hidden] flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-xl shadow-[var(--shadow-low)] border border-[rgba(0,0,0,0.06)] bg-[var(--color-brand)] text-black [transform:rotateY(180deg)] [backface-visibility:hidden] flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-lg font-semibold">Next Card</div>
                       <div className="text-sm opacity-80">Higher or Lower?</div>
@@ -220,28 +220,28 @@ export default function PlayYourMoviesRightPage() {
                 </div>
               </div>
             ) : (
-              <div className="text-gray-600">No more cards — great job!</div>
+              <div className="text-[var(--color-muted)]">No more cards — great job!</div>
             )}
 
             <div className="flex gap-2">
-              <button disabled={!next || gameOver || flipping} onClick={() => onGuess('lower')} className="px-4 py-2 rounded bg-brand-black text-white text-sm disabled:opacity-50">Lower</button>
-              <button disabled={!next || gameOver || flipping} onClick={() => onGuess('higher')} className="px-4 py-2 rounded bg-brand-red text-black text-sm disabled:opacity-50">Higher</button>
+              <button disabled={!next || gameOver || flipping} onClick={() => onGuess('lower')} className="px-4 py-2 rounded bg-[var(--color-surface)] text-[var(--color-text)] border border-[rgba(0,0,0,0.1)] text-sm disabled:opacity-50">Lower</button>
+              <button disabled={!next || gameOver || flipping} onClick={() => onGuess('higher')} className="px-4 py-2 rounded bg-[var(--color-brand)] text-black text-sm disabled:opacity-50">Higher</button>
             </div>
 
-            <div className="text-sm text-gray-700">Current streak: <strong className="text-brand-black">{streak}</strong></div>
+            <div className="text-sm text-[var(--color-muted)]">Current streak: <strong className="text-[var(--color-text)]">{streak}</strong></div>
           </div>
         </div>
 
         {gameOver && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
-              <button aria-label="Close" className="absolute right-3 top-3 text-gray-600 hover:text-brand-black" onClick={() => setGameOver(false)}>×</button>
-              <h3 className="text-xl font-bold text-brand-black mb-2">Game over</h3>
-              <p className="text-gray-700 mb-4">{shareText}</p>
+            <div className="bg-[var(--color-surface)] rounded-lg shadow-[var(--shadow-mid)] w-full max-w-md p-6 relative">
+              <button aria-label="Close" className="absolute right-3 top-3 text-[var(--color-muted)] hover:opacity-80" onClick={() => setGameOver(false)}>×</button>
+              <h3 className="text-xl font-bold mb-2">Game over</h3>
+              <p className="text-[var(--color-muted)] mb-4">{shareText}</p>
               <div className="space-y-3">
-                <div className="bg-gray-50 border rounded p-2 text-sm break-all text-brand-black">{shareText} {shareUrl}</div>
+                <div className="bg-[rgba(0,0,0,0.03)] border border-[rgba(0,0,0,0.06)] rounded p-2 text-sm break-all">{shareText} {shareUrl}</div>
                 <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => navigator.clipboard.writeText(`${shareText} ${shareUrl}`)} className="px-3 py-2 rounded bg-brand-black text-white text-sm">Copy</button>
+                  <button onClick={() => navigator.clipboard.writeText(`${shareText} ${shareUrl}`)} className="px-3 py-2 rounded bg-[var(--color-brand)] text-black text-sm">Copy</button>
                   <a className="px-3 py-2 rounded bg-brand-red text-black text-sm" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">Share on X</a>
                   <a className="px-3 py-2 rounded bg-blue-600 text-white text-sm" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer">Share on Facebook</a>
                   <button onClick={reset} className="px-3 py-2 rounded bg-green-600 text-white text-sm hover:brightness-95">Play again</button>

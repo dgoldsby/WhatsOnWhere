@@ -1,16 +1,21 @@
 import Link from 'next/link';
 import AppHeader from '@/components/AppHeader';
+// Global ThemeProvider is applied in RootLayout
 
 export default function GamesLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
       <AppHeader />
       <div className="container mx-auto px-4 py-6">
         <header className="mb-6">
-          <h1 className="text-3xl font-extrabold text-brand-black">Games</h1>
-          <p className="text-gray-700">Discover fun film and TV games.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-extrabold">Games</h1>
+              <p className="text-[var(--color-muted)]">Discover fun film and TV games.</p>
+            </div>
+          </div>
         </header>
-        <nav className="mb-6 border-b border-gray-200">
+        <nav className="mb-6 border-b border-[rgba(0,0,0,0.06)]">
           <ul className="flex gap-4 text-sm">
             <li>
               <Link href="/games" className="inline-block px-3 py-2 hover:underline">All Games</Link>

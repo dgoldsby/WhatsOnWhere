@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCredits, getPerson, getRandomPopularTitle, getDetails } from '@/lib/tmdb';
+import { getCredits, getPerson, getDetails, getRandomHighRatedUSMovie } from '@/lib/tmdb';
 import type { MediaType } from '@/types/media';
 
 export async function GET(request: Request) {
@@ -11,10 +11,17 @@ export async function GET(request: Request) {
     const targetIdStr = searchParams.get('targetId');
     const targetId = targetIdStr ? Number(targetIdStr) : undefined;
     const targetMediaType = (searchParams.get('targetMediaType') as MediaType) || undefined;
+    const startIdStr = searchParams.get('startId');
+    const startId = startIdStr ? Number(startIdStr) : undefined;
 
-    // Randomly choose type for start title
-    const type: MediaType = Math.random() < 0.5 ? 'movie' : 'tv';
-    let start = await getRandomPopularTitle(type, seed);
+    // Ensure start is a high-rated US movie to make the game more winnable
+    const type: MediaType = 'movie';
+    let start = startId && !Number.isNaN(startId)
+      ? await (async () => {
+          const d = await getDetails('movie', startId);
+          return { id: d.id, media_type: 'movie' as const, title: d.title, poster_path: d.poster_path, release_year: d.release_year };
+        })()
+      : await getRandomHighRatedUSMovie(seed);
 
     // Determine target
     let target:
@@ -54,7 +61,11 @@ export async function GET(request: Request) {
       } else if (target.kind === 'title') {
         if (start.id !== target.id) break;
       }
-      start = await getRandomPopularTitle(type, (seed ?? Date.now()) + attempts + 1);
+      if (startId) {
+        // If explicitly provided start conflicts, don't loop endlessly — just break
+        break;
+      }
+      start = await getRandomHighRatedUSMovie((seed ?? Date.now()) + attempts + 1);
     }
 
     const payload = {

@@ -200,6 +200,36 @@ export async function getRandomPopularTitle(type: MediaType, seed?: number): Pro
   };
 }
 
+// Random high-rated US movie picker for Seven Degrees starting title
+export async function getRandomHighRatedUSMovie(seed?: number): Promise<{ id: number; media_type: MediaType; title: string; poster_path: string | null; release_year?: number }> {
+  // Limit to first few pages for performance and determinism with seed
+  const page = seed ? (Math.abs(seed) % 5) + 1 : Math.floor(Math.random() * 5) + 1;
+  const params: Record<string, string | number> = {
+    sort_by: 'popularity.desc',
+    include_adult: 'false',
+    include_video: 'false',
+    page,
+    region: 'US',
+    with_origin_country: 'US',
+  } as any;
+  // Use Discover filter to ensure rating >= 7.0
+  (params as any)['vote_average.gte'] = 7;
+  const data = await tmdbFetch<any>('/discover/movie', params);
+  const results: any[] = Array.isArray(data?.results) ? data.results : [];
+  // Extra safety filter in case API returns edge items
+  const filtered = results.filter((r) => (r?.vote_average ?? 0) >= 7);
+  const pool = filtered.length > 0 ? filtered : results;
+  const idx = pool.length > 0 ? (seed ? Math.abs((seed * 9301 + 49297) % pool.length) : Math.floor(Math.random() * pool.length)) : 0;
+  const r = pool[Math.max(0, Math.min(idx, Math.max(0, pool.length - 1)))] || pool[0];
+  return {
+    id: r.id,
+    media_type: 'movie',
+    title: r.title || r.name,
+    poster_path: r.poster_path || null,
+    release_year: r.release_date ? Number(String(r.release_date).slice(0, 4)) : undefined,
+  };
+}
+
 export async function getPopularPeople(page = 1): Promise<Array<{ id: number; name: string; profile_path: string | null }>> {
   const data = await tmdbFetch<any>('/person/popular', { page });
   const results = Array.isArray(data?.results) ? data.results : [];
